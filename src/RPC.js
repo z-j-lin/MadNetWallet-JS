@@ -310,7 +310,25 @@ class RPC {
             return getMined;
         }
         catch (ex) {
-            throw new Error("RPC.getMindedTransaction: " + String(ex));
+            throw new Error("RPC.getMinedTransaction: " + String(ex));
+        }
+    }
+
+    /**
+     * Get block height of a transaction
+     * @param {hex} txHash
+     * @return {number} Block height
+     */
+    async getTxBlockHeight(txHash) {
+        try {
+            let txHeight = await this.request('get-tx-block-number', {"TxHash": txHash});
+            if (!txHeight["BlockHeight"]) {
+                throw "Block height not found"
+            }
+            return txHeight['BlockHeight'];
+        }
+        catch(ex) {
+            throw new Error("RPC.getTxBlockHeight: " + String(ex));
         }
     }
 
