@@ -13,7 +13,8 @@ class Transaction {
      */
     constructor(Wallet) {
         this.Wallet = Wallet;
-        this.Tx = new Tx(Wallet)
+        this.Tx = new Tx(Wallet);
+        this.Utils = utils;
 
         this.outValue = [];
     }
@@ -63,7 +64,7 @@ class Transaction {
             if (!account["MultiSigner"]["curve"]) {
                 throw "Cannot get curve";
             }
-            let owner = await utils.prefixSVACurve(1, toCurve, to);
+            let owner = await this.Utils.prefixSVACurve(1, toCurve, to);
             let vStore = this.Tx.ValueStore(
                 validator.numToHex(value),
                 this.Tx.Vout.length,
@@ -120,9 +121,9 @@ class Transaction {
             else {
                 rawData = validator.txtToHex(rawData);
             }
-            let deposit = await utils.calculateDeposit(rawData, duration);
+            let deposit = await this.Utils.calculateDeposit(rawData, duration);
             deposit = validator.isBigInt(deposit)
-            let owner = await utils.prefixSVACurve(3, account["MultiSigner"]["curve"], account["address"]);
+            let owner = await this.Utils.prefixSVACurve(3, account["MultiSigner"]["curve"], account["address"]);
             let txIdx = this.Tx.Vout.length;
             if (index.indexOf("0x") === 0) {
                 index = validator.isHex(index);
@@ -212,7 +213,7 @@ class Transaction {
                 for (let i = 0; i < outValue["dsIndex"].length; i++) {
                     let DS = await this.Wallet.Rpc.getDataStoreByIndex(account["address"], account["curve"], outValue["dsIndex"][i]["index"]);
                     if (DS) {
-                        let reward = await utils.remainigDeposit(DS, outValue["dsIndex"][i]["epoch"]);
+                        let reward = await this.Utils.remainigDeposit(DS, outValue["dsIndex"][i]["epoch"]);
                         if (reward) {
                             await this._createDataTxIn(account["address"], DS);
                             outValue["totalValue"] = BigInt(outValue["totalValue"]) - BigInt(reward);
