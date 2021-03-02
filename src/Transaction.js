@@ -175,7 +175,7 @@ class Transaction {
                 }
             }
 
-            if (valueIndex && this.outValue[valueIndex]) {
+            if (!isNaN(valueIndex) && this.outValue[valueIndex]) {
                 this.outValue[valueIndex]["totalValue"] += value;
                 if (dsIndex) {
                     this.outValue[valueIndex]["dsIndex"].push(dsIndex)
