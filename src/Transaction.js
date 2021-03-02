@@ -169,7 +169,7 @@ class Transaction {
         try {
             let valueIndex = false;
             for (let i = 0; i < this.outValue.length; i++) {
-                if (this.outValue[i] === ownerAddress) {
+                if (this.outValue[i]["address"] === ownerAddress) {
                     valueIndex = i;
                     break;
                 }
