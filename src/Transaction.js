@@ -169,13 +169,13 @@ class Transaction {
         try {
             let valueIndex = false;
             for (let i = 0; i < this.outValue.length; i++) {
-                if (this.outValue[i] === ownerAddress) {
+                if (this.outValue[i]["address"] === ownerAddress) {
                     valueIndex = i;
                     break;
                 }
             }
 
-            if (valueIndex && this.outValue[valueIndex]) {
+            if (!isNaN(valueIndex) && this.outValue[valueIndex]) {
                 this.outValue[valueIndex]["totalValue"] += value;
                 if (dsIndex) {
                     this.outValue[valueIndex]["dsIndex"].push(dsIndex)
