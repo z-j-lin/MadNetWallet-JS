@@ -313,6 +313,24 @@ class RPC {
             throw new Error("RPC.getMinedTransaction: " + String(ex));
         }
     }
+    
+    /**
+     * Get pending transaction
+     * @param {hex} txHash
+     * @return {Object} transaction object 
+     */
+     async getPendingTransaction(txHash) {
+        try {
+            let getPending = await this.request("get-pending-transaction", { "TxHash": txHash });
+            if (!getPending["Tx"]) {
+                throw "Transaction not pending"
+            }
+            return getPending["Tx"];
+        }
+        catch(ex) {
+            throw new Error("RPC.getPendingTransaction: " + String(ex));
+        }
+    }
 
     /**
      * Get block height of a transaction
