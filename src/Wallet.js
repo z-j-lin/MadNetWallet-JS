@@ -18,6 +18,7 @@ class Wallet {
         this.Account = new Account(this)
         this.Transaction = new Transaction(this);
         this.Rpc = new RPC(this, rpcServer);
+        this.Validator = validator;
     }
 }
 module.exports = Wallet;

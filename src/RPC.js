@@ -148,30 +148,46 @@ class RPC {
     }
 
     /**
-     * Get value store UTXO IDs
-     * @param {hex} address
-     * @param {number} curve
-     * @param {number} minValue
-     */
-    async getValueStoreUTXOIDs(address, curve, minValue) {
+     * Get account balance
+    * @param {hex} address
+    * @param {number} curve
+    * @param {number} minValue !optional
+    * @return {Array[utxos, totalValue]}
+    */
+    async getValueStoreUTXOIDs(address, curve, minValue = false) {
         try {
-            if (!address || !curve || !minValue) {
+            if (!address || !curve) {
                 throw "Invalid arguments"
             }
             address = validator.isAddress(address)
             curve = validator.isNumber(curve)
-            minValue = validator.numToHex(minValue)
-            let valueForOwner = { "CurveSpec": curve, "Account": address, "Minvalue": minValue.toString() }
-            let value = await this.request("get-value-for-owner", valueForOwner)
-            if (!value["UTXOIDs"] || !value["TotalValue"]) {
-                value = {};
-                value["UTXOIDs"] = [];
-                value["TotalValue"] = "0"
+            if (!minValue) {
+                minValue = constant.MaxValue;
             }
-            return [value["UTXOIDs"], value["TotalValue"]];
+            else {
+                minValue = validator.numToHex(minValue)
+            }
+            let valueForOwner = { "CurveSpec": curve, "Account": address, "Minvalue": minValue, "PaginationToken": "" }
+            let runningUtxos = [];
+            let runningTotal = BigInt("0");
+            while (true) {
+                let value = await this.request("get-value-for-owner", valueForOwner)
+                if (!value["UTXOIDs"] || value["UTXOIDs"].length == 0 || !value["TotalValue"]) {
+                    break;
+                }
+                runningUtxos = runningUtxos.concat(value["UTXOIDs"]);
+                runningTotal = BigInt(BigInt("0x" + value["TotalValue"]) + BigInt(runningTotal));
+                if (!value["PaginationToken"]) {
+                    break;
+                }
+                valueForOwner["PaginationToken"] = value["PaginationToken"];
+            }
+            runningTotal = runningTotal.toString(16)
+            if (runningTotal.length % 2) { runningTotal = '0' + runningTotal; }
+            return [runningUtxos, runningTotal];
         }
         catch (ex) {
-            throw new Error("RPC.getValueStoreUTXOIDs: " + String(ex))
+            throw new Error("RPC.getBalance: " + String(ex))
         }
     }
 
@@ -210,7 +226,7 @@ class RPC {
                 let dataStoreIDs = await this.request("iterate-name-space", reqData);
                 if (!dataStoreIDs["Results"]) {
                     break
-                } 
+                }
                 DataStoreUTXOIDs = DataStoreUTXOIDs.concat(dataStoreIDs["Results"]);
                 if (dataStoreIDs["Results"].length <= limit && !getAll) {
                     break;
@@ -262,7 +278,7 @@ class RPC {
         try {
             let dsUTXOID = await this.getDataStoreUTXOIDs(address, curve, 1, index);
             let dsUTXOIDS = []
-            for ( let i = 0; i < dsUTXOID.length; i++) {
+            for (let i = 0; i < dsUTXOID.length; i++) {
                 dsUTXOIDS.push(dsUTXOID[i]["UTXOID"])
             }
             if (dsUTXOIDS.length > 0) {
@@ -321,16 +337,18 @@ class RPC {
      */
     async getTxBlockHeight(txHash) {
         try {
-            let txHeight = await this.request('get-tx-block-number', {"TxHash": txHash});
+            let txHeight = await this.request('get-tx-block-number', { "TxHash": txHash });
             if (!txHeight["BlockHeight"]) {
                 throw "Block height not found"
             }
             return txHeight['BlockHeight'];
         }
-        catch(ex) {
+        catch (ex) {
             throw new Error("RPC.getTxBlockHeight: " + String(ex));
         }
     }
+
+
 
     /**
      * Send a request to the rpc server
@@ -352,18 +370,45 @@ class RPC {
             if (!data) {
                 data = {};
             }
-            let resp = await Axios.post(this.rpcServer + route, data, { timeout: constant.ReqTimeout, validateStatus: function (status) { return status } });
-            if (!resp || !resp.data) {
-                throw "Bad response";
-            }
-            if (resp.data["error"]) {
-                throw JSON.stringify(resp.data["error"])
+            let attempts, timeout = false;
+            let resp;
+            while (true) {
+                resp = await Axios.post(this.rpcServer + route, data, { timeout: constant.ReqTimeout, validateStatus: function (status) { return status } });
+                if (!resp || !resp.data || resp.data["error"]) {
+                    [attempts, timeout] = await this.backOffRetry(attempts, timeout);
+                    continue;
+                }
+                break
             }
             return resp.data;
         }
         catch (ex) {
             throw new Error("RPC.request: " + String(ex));
         }
+    }
+
+    async backOffRetry(attempts, timeout) {
+        if (attempts >= 5) {
+            throw new Error("RPC.backOffRetry: RPC request attempt limit reached")
+        }
+        if (!attempts) {
+            attempts = 1
+        }
+        else {
+            attempts++
+        }
+        if (!timeout) {
+            timeout = 1000;
+        }
+        else {
+            timeout = Math.floor(timeout * 1.25);
+        }
+        await this.sleep(timeout)
+        return [attempts, timeout];
+    }
+
+    async sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 }
 module.exports = RPC;
