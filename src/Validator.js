@@ -1,5 +1,3 @@
-const { calculateNumEpochs } = require("./Transaction/Utils");
-
 /**
  * Basic utilities for input validation and mutation
  */

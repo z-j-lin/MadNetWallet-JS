@@ -373,7 +373,9 @@ class RPC {
             let attempts, timeout = false;
             let resp;
             while (true) {
-                resp = await Axios.post(this.rpcServer + route, data, { timeout: constant.ReqTimeout, validateStatus: function (status) { return status } });
+                try {
+                    resp = await Axios.post(this.rpcServer + route, data, { timeout: constant.ReqTimeout, validateStatus: function (status) { return status } });
+                } catch (ex) {}
                 if (!resp || !resp.data || resp.data["error"]) {
                     [attempts, timeout] = await this.backOffRetry(attempts, timeout);
                     continue;
