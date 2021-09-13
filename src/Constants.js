@@ -8,6 +8,7 @@ const BaseDatasizeConst = 376;
 const DataStoreMinDeposit = ((BaseDatasizeConst + 1) * 3);
 const EpochBlockSize = 1024;
 const EpochBoundary = 960;
+const MaxValue = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
 
 module.exports = {
     MaxUTXOs,
@@ -16,5 +17,6 @@ module.exports = {
     BaseDatasizeConst,
     DataStoreMinDeposit,
     EpochBlockSize,
-    EpochBoundary
+    EpochBoundary,
+    MaxValue
 }

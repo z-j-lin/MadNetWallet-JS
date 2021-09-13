@@ -97,7 +97,6 @@ class Accounts {
             this.accounts[accountIndex]["UTXO"]["ValueStoreIDs"] = valueUTXOIDs;
             this.accounts[accountIndex]["UTXO"]["Value"] = BigInt("0x" + TotalValue);
             UTXOIDs = UTXOIDs.concat(valueUTXOIDs)
-            // TODO: GETALL
             let dataUTXOIDs = await this.Wallet.Rpc.getDataStoreUTXOIDs(address, this.accounts[accountIndex]["curve"], false, false)
             this.accounts[accountIndex]["UTXO"]["DataStoreIDs"] = dataUTXOIDs;
             UTXOIDs = UTXOIDs.concat(dataUTXOIDs)

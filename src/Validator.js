@@ -1,5 +1,3 @@
-const { isValidSignature } = require("ethereumjs-util");
-
 /**
  * Basic utilities for input validation and mutation
  */
@@ -130,6 +128,17 @@ var self = module.exports = {
         }
         catch (ex) {
             throw new Error("Validator.numToHex: " + String(ex));
+        }
+    },
+
+    hexToInt: (hex) => {
+        try {
+            hex = self.isHex(hex);
+            let bn = BigInt('0x' + hex).toString(10);
+            return bn;
+        }
+        catch(ex) {
+            throw new Error("Validator.hexToInt: " + String(ex));
         }
     },
 
